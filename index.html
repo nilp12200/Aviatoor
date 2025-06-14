@@ -133,7 +133,7 @@
           multiplierText.textContent = "💥 Crashed at " + multiplier.toFixed(2) + "x";
 
           if (!cashedOut) {
-            result.textContent = `You lost ₹${bet.toFixed(2)}!`;
+            result.textContent = `You lost ${bet.toFixed(2)}! Coins`;
             result.className = "text-red-400 font-bold mt-2";
 
             const planeRect = plane.getBoundingClientRect();
