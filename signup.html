@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Signup</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 flex justify-center items-center h-screen text-white">
+  <div class="bg-gray-800 p-8 rounded-lg shadow-lg w-96">
+    <h1 class="text-2xl font-bold text-center mb-6">Signup</h1>
+    <input id="username" type="text" placeholder="Username" class="w-full p-2 mb-4 rounded text-black" />
+    <input id="password" type="password" placeholder="Password" class="w-full p-2 mb-4 rounded text-black" />
+    <button onclick="signup()" class="bg-blue-500 hover:bg-blue-600 w-full py-2 rounded">Create Account</button>
+    <p class="text-sm mt-4 text-center">Already have an account? <a href="index.html" class="text-blue-400">Login</a></p>
+    <p id="msg" class="text-center mt-4"></p>
+  </div>
+  <script>
+    function signup() {
+      const user = document.getElementById("username").value;
+      const pass = document.getElementById("password").value;
+      const users = JSON.parse(localStorage.getItem("users") || "{}");
+      if (users[user]) {
+        document.getElementById("msg").textContent = "User already exists.";
+      } else {
+        users[user] = { password: pass, coins: 100 };
+        localStorage.setItem("users", JSON.stringify(users));
+        localStorage.setItem("loggedInUser", user);
+        window.location.href = "game.html";
+      }
+    }
+  </script>
+</body>
+</html>
