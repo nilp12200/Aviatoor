@@ -3,180 +3,31 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Aviator Game</title>
+  <title>Login</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    #plane {
-      transition: transform 0.1s linear;
-    }
-    #explosion {
-      transition: opacity 0.3s ease;
-    }
-    .glow {
-      text-shadow: 0 0 5px #ffd700, 0 0 10px #ffd700, 0 0 20px #ffeb3b;
-    }
-  </style>
 </head>
-<body class="bg-gradient-to-br from-gray-900 to-slate-900 min-h-screen flex items-center justify-center font-sans">
-
-  <!-- Sound Effects -->
-  <audio id="blastSound" src="blast.mp3" preload="auto"></audio>
-  <audio id="creditedSound" src="credited.mp3" preload="auto"></audio>
-  <audio id="debitedSound" src="debited.mp3" preload="auto"></audio>
-
-  <div class="bg-gradient-to-br from-slate-800 to-gray-700 p-8 rounded-3xl shadow-2xl w-[380px] text-white">
-    
-    <h1 class="text-4xl font-extrabold text-center mb-6 text-blue-400 drop-shadow-md">✈ Aviator Game</h1>
-    
-    <div class="flex justify-between items-center mb-4 px-2">
-      <span class="text-lg text-yellow-400 font-semibold glow">💰 Coins: <span id="coinDisplay">100</span></span>
-      <span class="text-sm text-gray-300 italic">Good luck, pilot!</span>
-    </div>
-    
-    <div class="relative h-64 bg-slate-600 rounded-xl overflow-hidden mb-6 border border-blue-500 shadow-inner">
-      <div id="plane" class="absolute bottom-0 left-1/2 transform -translate-x-1/2 text-5xl">✈</div>
-      <div id="explosion" class="absolute text-5xl hidden">💥</div>
-    </div>
-
-    <div id="multiplier" class="text-3xl font-bold text-center text-cyan-400 mb-6">1.00x</div>
-
-    <div class="space-y-4">
-      <input id="betAmount" type="number" placeholder="Enter Bet Amount" class="w-full px-4 py-2 rounded-lg text-black focus:ring-2 focus:ring-blue-400" />
-
-      <div class="flex justify-between">
-        <button id="startBtn" class="bg-green-500 hover:bg-green-600 w-[48%] py-2 rounded-lg font-semibold shadow-md transition duration-200">
-          Start
-        </button>
-        <button id="cashOutBtn" class="bg-yellow-400 hover:bg-yellow-300 text-black w-[48%] py-2 rounded-lg font-semibold shadow-md disabled:opacity-50 transition duration-200" disabled>
-          Cash Out
-        </button>
-      </div>
-    </div>
-
-    <div id="result" class="text-center text-lg font-medium mt-6 min-h-[24px]"></div>
+<body class="bg-gray-900 flex justify-center items-center h-screen text-white">
+  <div class="bg-gray-800 p-8 rounded-lg shadow-lg w-96">
+    <h1 class="text-2xl font-bold text-center mb-6">Login</h1>
+    <input id="username" type="text" placeholder="Username" class="w-full p-2 mb-4 rounded text-black" />
+    <input id="password" type="password" placeholder="Password" class="w-full p-2 mb-4 rounded text-black" />
+    <button onclick="login()" class="bg-green-500 hover:bg-green-600 w-full py-2 rounded">Login</button>
+    <p class="text-sm mt-4 text-center">Don't have an account? <a href="signup.html" class="text-blue-400">Signup</a></p>
+    <p id="msg" class="text-center mt-4"></p>
   </div>
-
   <script>
-    let multiplier = 1.0;
-    let crashed = false;
-    let cashedOut = false;
-    let animationFrame;
-    let bet = 0;
-    let coins = 100;
+    function login() {
+      const user = document.getElementById("username").value;
+      const pass = document.getElementById("password").value;
+      const users = JSON.parse(localStorage.getItem("users") || "{}");
 
-    const multiplierText = document.getElementById("multiplier");
-    const plane = document.getElementById("plane");
-    const explosion = document.getElementById("explosion");
-    const startBtn = document.getElementById("startBtn");
-    const cashOutBtn = document.getElementById("cashOutBtn");
-    const result = document.getElementById("result");
-    const coinDisplay = document.getElementById("coinDisplay");
-
-    const blastSound = document.getElementById("blastSound");
-    const creditedSound = document.getElementById("creditedSound");
-    const debitedSound = document.getElementById("debitedSound");
-
-    function updateCoinDisplay() {
-      coinDisplay.textContent = Math.floor(coins);
+      if (users[user] && users[user].password === pass) {
+        localStorage.setItem("loggedInUser", user);
+        window.location.href = "game.html";
+      } else {
+        document.getElementById("msg").textContent = "Invalid username or password.";
+      }
     }
-
-    startBtn.onclick = () => {
-      const betInput = document.getElementById("betAmount");
-      bet = parseFloat(betInput.value);
-
-      if (isNaN(bet) || bet <= 0) {
-        alert("Please enter a valid bet amount.");
-        return;
-      }
-
-      if (bet > coins) {
-        alert("Not enough coins!");
-        return;
-      }
-
-      coins -= bet;
-      updateCoinDisplay();
-      debitedSound.play();
-
-      multiplier = 1.0;
-      crashed = false;
-      cashedOut = false;
-      result.textContent = "";
-      cashOutBtn.disabled = false;
-
-      explosion.classList.add("hidden");
-      plane.classList.remove("hidden");
-      plane.style.bottom = "0px";
-      plane.style.left = "50%";
-      plane.style.transform = "translateX(-50%)";
-
-      let bottom = 0;
-      let left = 50;
-      const maxBottom = 220;
-      const maxLeft = 85;
-
-      function animate() {
-        if (crashed || cashedOut) return;
-
-        multiplier += 0.01;
-        multiplierText.textContent = multiplier.toFixed(2) + "x";
-
-        if (bottom < maxBottom) bottom += 1.5;
-        if (left < maxLeft) left += 1;
-
-        plane.style.bottom = bottom + "px";
-        plane.style.left = `calc(${left}% - 1rem)`;
-        plane.style.transform = `rotate(-25deg) scale(1.2)`;
-
-        if (Math.random() < 0.005 * multiplier) {
-          crashed = true;
-          multiplierText.textContent = "💥 Crashed at " + multiplier.toFixed(2) + "x";
-
-          if (!cashedOut) {
-            result.textContent = `You lost ${bet.toFixed(2)}! Coins`;
-            result.className = "text-red-400 font-bold mt-2";
-
-            const planeRect = plane.getBoundingClientRect();
-            const containerRect = plane.parentElement.getBoundingClientRect();
-            const offsetX = planeRect.left - containerRect.left;
-            const offsetY = planeRect.top - containerRect.top;
-
-            explosion.style.left = `${offsetX}px`;
-            explosion.style.top = `${offsetY}px`;
-            explosion.classList.remove("hidden");
-            plane.classList.add("hidden");
-
-            blastSound.play();
-          }
-
-          cashOutBtn.disabled = true;
-          return;
-        }
-
-        animationFrame = requestAnimationFrame(animate);
-      }
-
-      cancelAnimationFrame(animationFrame);
-      animate();
-    };
-
-    cashOutBtn.onclick = () => {
-      if (!crashed) {
-        cashedOut = true;
-        cancelAnimationFrame(animationFrame);
-
-        const win = bet * multiplier;
-        coins += win;
-        updateCoinDisplay();
-        creditedSound.play();
-
-        result.textContent = `🎉 You cashed out at ${multiplier.toFixed(2)}x and won ${win.toFixed(2)}!Coins`;
-        result.className = "text-green-400 font-bold mt-2";
-        cashOutBtn.disabled = true;
-      }
-    };
-
-    updateCoinDisplay();
   </script>
 </body>
 </html>
